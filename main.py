@@ -55,8 +55,13 @@ async def stats(interaction: discord.Interaction):
 
 @tree.command(name="chat", description="Chat with Sparky")
 async def chat(interaction: discord.Interaction, message: str):
+
+    view = discord.ui.View()
+    view.add_item(discord.ui.Button(style=discord.ButtonStyle.danger, label="Cancel", custom_id="cancel"))
+    # options for the ButtonStyle are: primary, secondary, success, danger, link
+
     if get_response(message):
-        await interaction.response.send_message(get_response(message), ephemeral = True)
+        await interaction.response.send_message(get_response(message), ephemeral = True, view=view)
     else:
         ### LLM API LOGIC HERE ###
         return
