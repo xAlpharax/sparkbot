@@ -13,6 +13,7 @@ DISCORD_TOKEN = str(os.getenv("DISCORD_TOKEN"))
 import discord
 
 from responses import get_response
+from sample_query import query
 
 class CustomClient(discord.Client):
     def __init__(self):
@@ -29,8 +30,30 @@ class CustomClient(discord.Client):
     async def on_message(self, message):
         if message.author == self.user:
             return
-        if get_response(message.content):
-            await message.channel.send(get_response(message.content))
+
+        ### check the category ID of the current channel ###
+        if message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
+            output = query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
+                "question": message.content,
+            })
+
+            output["text"] = output["text"][0:2000]
+
+            await message.channel.send(output["text"])
+
+        ### check the category ID of the current channel ###
+        elif message.channel.id == 1244684281910132796 or message.channel.id == 1239122382304575508:
+            output = query({    # PRIV SERVER CHANNEL                              # PUB SERVER
+                "question": message.content,
+            })
+
+            output["text"] = output["text"][0:2000]
+
+            await message.channel.send(output["text"])
+
+        ### check if hardcoded guide message is better suited ###
+        elif response := get_response(message.content):
+            await message.channel.send(response)
 
 client = CustomClient()
 tree = discord.app_commands.CommandTree(client)
@@ -53,23 +76,30 @@ async def stats(interaction: discord.Interaction):
 
 ##########################################################################################
 
-from sample_query import query
+# from sample_query import query
 
 @tree.command(name="chat", description="Chat with Sparky")
 async def chat(interaction: discord.Interaction, message: str):
 
-    view = discord.ui.View()
-    view.add_item(discord.ui.Button(style=discord.ButtonStyle.danger, label="Cancel", custom_id="cancel"))
+    # view = discord.ui.View()
+    # view.add_item(discord.ui.Button(style=discord.ButtonStyle.danger, label="Cancel", custom_id="cancel"))
     # options for the ButtonStyle are: primary, secondary, success, danger, link
 
-    if get_response(message):
-        await interaction.response.send_message(get_response(message), ephemeral = True, view=view)
-    else:
-        ### LLM API LOGIC HERE ###
-        output = query({
-            "question": message,
-        })
-        await interaction.response.send_message(output["text"], ephemeral = True, view=view)
+    await interaction.response.defer(thinking=True, ephemeral=True)
+
+    ### LLM API LOGIC STARTS HERE ###
+
+    output = query({
+        "question": message,
+    })
+
+    output["text"] = output["text"][0:2000]
+
+    ### LLM API LOGIC ENDS HERE ###
+
+    await interaction.followup.send(output["text"])#, view=view)
+    # output = query({"question" : message})["text"][0:2000]
+    # await interaction.response.send_message(output, ephemeral = True)#, view=view)
 
 ##########################################################################################
 
