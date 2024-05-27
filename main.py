@@ -53,6 +53,8 @@ async def stats(interaction: discord.Interaction):
 
 ##########################################################################################
 
+from sample_query import query
+
 @tree.command(name="chat", description="Chat with Sparky")
 async def chat(interaction: discord.Interaction, message: str):
 
@@ -64,7 +66,10 @@ async def chat(interaction: discord.Interaction, message: str):
         await interaction.response.send_message(get_response(message), ephemeral = True, view=view)
     else:
         ### LLM API LOGIC HERE ###
-        return
+        output = query({
+            "question": message,
+        })
+        await interaction.response.send_message(output["text"], ephemeral = True, view=view)
 
 ##########################################################################################
 

@@ -6,8 +6,10 @@ def query(payload):
     response = requests.post(API_URL, json=payload)
     return response.json()
 
-output = query({
-    "question": "Hey, what is Photonspark?",
-})
+if __name__ == "__main__":
 
-print(output)
+    output = query({
+        "question": "Hey, what is Photonspark?",
+    })
+
+    print(output)
