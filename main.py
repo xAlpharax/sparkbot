@@ -84,6 +84,7 @@ async def chat(interaction: discord.Interaction, message: str):
     # view = discord.ui.View()
     # view.add_item(discord.ui.Button(style=discord.ButtonStyle.danger, label="Cancel", custom_id="cancel"))
     # options for the ButtonStyle are: primary, secondary, success, danger, link
+    # buttons need to be added again
 
     await interaction.response.defer(thinking=True, ephemeral=True)
 
