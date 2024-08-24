@@ -24,7 +24,7 @@ class CustomClient(discord.Client):
         self.synced = False
 
     async def on_ready(self):
-        upsert({})
+        _ = upsert({})
         await self.wait_until_ready()
         if not self.synced:
             await tree.sync()
@@ -104,9 +104,9 @@ async def chat(interaction: discord.Interaction, message: str):
     # output = query({"question" : message})["text"][0:2000]
     # await interaction.response.send_message(output, ephemeral = True)#, view=view)
 
-@tree.command(name="sync", description="Sync the bot with the vector database")
+@tree.command(name="sync", description="Sync/upsert the bot with the vector database")
 async def sync(interaction: discord.Interaction):
-    upsert({})
+    _ = upsert({})
     await interaction.response.send_message("Synced with the vector database!", ephemeral=True)
 
 ##########################################################################################
