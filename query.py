@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-API_URL = str(os.getenv("API_URL"))
+PREDICTION_API_URL = str(os.getenv("PREDICTION_API_URL"))
 
 import requests
 
 def query(payload):
 
-    response = requests.post(API_URL, json=payload).json()
+    response = requests.post(PREDICTION_API_URL, json=payload).json()
     print(response)
 
     return response

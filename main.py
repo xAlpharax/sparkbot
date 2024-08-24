@@ -13,7 +13,10 @@ DISCORD_TOKEN = str(os.getenv("DISCORD_TOKEN"))
 import discord
 
 from responses import get_response
-from sample_query import query
+
+# LLM AI API INTERACTION
+from query import query
+from upsert import upsert
 
 class CustomClient(discord.Client):
     def __init__(self):
@@ -21,6 +24,7 @@ class CustomClient(discord.Client):
         self.synced = False
 
     async def on_ready(self):
+        upsert({})
         await self.wait_until_ready()
         if not self.synced:
             await tree.sync()
@@ -76,8 +80,6 @@ async def stats(interaction: discord.Interaction):
 
 ##########################################################################################
 
-# from sample_query import query
-
 @tree.command(name="chat", description="Chat with Sparky")
 async def chat(interaction: discord.Interaction, message: str):
 
@@ -101,6 +103,11 @@ async def chat(interaction: discord.Interaction, message: str):
     await interaction.followup.send(output["text"])#, view=view)
     # output = query({"question" : message})["text"][0:2000]
     # await interaction.response.send_message(output, ephemeral = True)#, view=view)
+
+@tree.command(name="sync", description="Sync the bot with the vector database")
+async def sync(interaction: discord.Interaction):
+    upsert({})
+    await interaction.response.send_message("Synced with the vector database!", ephemeral=True)
 
 ##########################################################################################
 
