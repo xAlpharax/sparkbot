@@ -6,19 +6,38 @@ import os
 load_dotenv()
 PREDICTION_API_URL = str(os.getenv("PREDICTION_API_URL"))
 
-import requests
+##############################################################################
 
-def query(payload):
+# import requests
 
-    response = requests.post(PREDICTION_API_URL, json=payload).json()
-    print(response)
+# outdated implementation of the massive time it takes to query the API
+# def query(payload):
 
-    return response
+    # response = requests.post(PREDICTION_API_URL, json=payload).json()
+    # print(response)
+
+    # return response
+
+##############################################################################
+
+import aiohttp
+
+async def query(payload):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(PREDICTION_API_URL, json=payload) as response:
+            return await response.json()
 
 ##############################################################################
 
 if __name__ == "__main__":
-    output = query({
-        "question": "Hey, what is Photonspark?",
-        "chatId": "1234567890",
-    })
+
+    import asyncio
+
+    async def main():
+        output = await query({
+            "question": "Hey, what is Photonspark?",
+            "chatId": "1234567890",
+        })
+        return output
+
+    print(asyncio.run(main()))

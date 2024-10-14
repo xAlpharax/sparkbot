@@ -12,19 +12,13 @@ DISCORD_TOKEN = str(os.getenv("DISCORD_TOKEN"))
 
 import discord
 
-from responses import get_response
-
-# helper function to send long messages
-async def send_long_message(channel, text):
-    if len(text) > 2000:
-        for i in range(0, len(text), 2000):
-            await channel.send(text[i:i + 2000])
-    else:
-        await channel.send(text)
+# MESSAGING TWEAKS AND UTILS
+from responses import get_response, send_long_message
 
 # LLM AI API INTERACTION
 from query import query
 from upsert import upsert
+from reset_memory import reset_memory
 
 class CustomClient(discord.Client):
     def __init__(self):
@@ -53,7 +47,7 @@ class CustomClient(discord.Client):
 
         # Here you can remove the channel category checks if you want to allow DMs
         if isinstance(message.channel, discord.DMChannel):  # Check if it's a DM
-            output = query({
+            output = await query({
                 "question": message.content,
                 "chatId": user_chat_id  # Use user chatId
             })
@@ -61,7 +55,7 @@ class CustomClient(discord.Client):
 
         ### check the category ID of the current channel ###
         elif message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
-            output = query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
+            output = await query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
                 "question": message.content,
                 "chatId": user_chat_id  # Include chatId in query payload
             })
@@ -70,7 +64,7 @@ class CustomClient(discord.Client):
 
         ### check the channel ID of the current channel ###
         elif message.channel.id == 1244684281910132796 or message.channel.id == 1239122382304575508:
-            output = query({    # PRIV SERVER CHANNEL                              # PUB SERVER
+            output = await query({    # PRIV SERVER CHANNEL                              # PUB SERVER
                 "question": message.content,
                 "chatId": user_chat_id  # Include chatId in query payload
             })
@@ -85,10 +79,6 @@ client = CustomClient()
 tree = discord.app_commands.CommandTree(client)
 
 ##########################################################################################
-
-@tree.command(name="test", description="Command used for testing")
-async def test(interaction: discord.Interaction, name: str):
-    await interaction.response.send_message(f"Hello {name}. I was made with Discord.py!", ephemeral = True)
 
 @tree.command(name="ping", description="pong")
 async def ping(interaction: discord.Interaction):
@@ -113,7 +103,7 @@ async def chat(interaction: discord.Interaction, message: str):
     await interaction.response.defer(thinking=True, ephemeral=True)  # Acknowledge the user's input
 
     ### LLM API LOGIC STARTS HERE ###
-    output = query({
+    output = await query({
         "question": message,
         "chatId": user_chat_id  # Send chat_id along with the message for memory purposes
     })
@@ -122,19 +112,49 @@ async def chat(interaction: discord.Interaction, message: str):
     # Send long message using the helper function for splitting text over 2000 chars
     await send_long_message(interaction.followup, output["text"])
 
-@tree.command(name="reset_chat", description="Reset your chat history with Sparky")
-async def reset_chat(interaction: discord.Interaction):
-    user_id = interaction.user.id  # Get the ID of the user issuing the command
-    if user_id in client.user_sessions:
-        del client.user_sessions[user_id]  # Delete the user's memory
-        await interaction.response.send_message("Your chat history has been reset!", ephemeral=True)
-    else:
-        await interaction.response.send_message("You have no active chat history.", ephemeral=True)
+@tree.command(name="reset_all_memory", description="ADMIN UTIL: Reset all chat memory of Sparky")
+async def reset_all_memory(interaction: discord.Interaction):
 
-@tree.command(name="sync", description="Sync/upsert the bot with the vector database")
-async def sync(interaction: discord.Interaction):
-    _ = upsert({})
-    await interaction.response.send_message("Synced with the vector database!", ephemeral=True)
+    if interaction.user.id == 313565570660564994:
+
+        response = reset_memory()
+        error = response.get("error")
+
+        # Prepare the update message based on the success of the operation
+        if error:
+            print(f"Reset failed. Please check the error messages above. {error}")
+            await interaction.response.send_message(error, ephemeral=True)
+        else:  # If there was a success
+            # del client.user_sessions  # Remove all user memory from the bot
+            print("Reset successful:", response)
+            await interaction.response.send_message(f"Your chat memory has been reset! {response}", ephemeral=True)
+
+    else:
+        await interaction.response.send_message("You do not have permission to do that")
+
+@tree.command(name="update_docs", description="ADMIN UTIL: Update the vector database with new docs changes")
+async def update_docs(interaction: discord.Interaction):
+
+    if interaction.user.id == 313565570660564994:
+
+        # Send an initial ephemeral response
+        await interaction.response.send_message("Updating the vector database... Please wait.", ephemeral=True)
+
+        # Perform the upsert operation
+        success = upsert({})
+
+        # Prepare the update message based on the success of the operation
+        if success:
+            update_message = "Successfully updated the vector database!"
+        else:
+            update_message = "Failed to update the vector database. Please try again later."
+
+        # Send a follow-up ephemeral message with the update status
+        # Editing the already sent message is harder, so we send a new one
+        await interaction.followup.send(update_message, ephemeral=True)
+
+    else:
+        await interaction.response.send_message("You do not have permission to do that")
 
 ##########################################################################################
 

@@ -10,9 +10,9 @@ import requests
 
 def upsert(payload):
 
-    response = requests.post(UPSERT_API_URL, json=payload)
+    response = requests.post(UPSERT_API_URL, json=payload).json()
 
-    return response.json()
+    return response
 
 ##############################################################################
 
