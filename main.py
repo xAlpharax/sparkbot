@@ -51,14 +51,20 @@ class CustomClient(discord.Client):
         # Use the user-specific chat_id in the query
         user_chat_id = self.user_sessions[user_id]["chat_id"]
 
+        # Here you can remove the channel category checks if you want to allow DMs
+        if isinstance(message.channel, discord.DMChannel):  # Check if it's a DM
+            output = query({
+                "question": message.content,
+                "chatId": user_chat_id  # Use user chatId
+            })
+            await send_long_message(message.channel, output["text"])
+
         ### check the category ID of the current channel ###
-        if message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
+        elif message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
             output = query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
                 "question": message.content,
-                "chatId": user_chat_id  # Include chat_id in query payload
+                "chatId": user_chat_id  # Include chatId in query payload
             })
-
-            # output["text"] = output["text"][0:2000]
 
             await send_long_message(message.channel, output["text"])
 
@@ -66,10 +72,8 @@ class CustomClient(discord.Client):
         elif message.channel.id == 1244684281910132796 or message.channel.id == 1239122382304575508:
             output = query({    # PRIV SERVER CHANNEL                              # PUB SERVER
                 "question": message.content,
-                "chatId": user_chat_id  # Include chat_id in query payload
+                "chatId": user_chat_id  # Include chatId in query payload
             })
-
-            # output["text"] = output["text"][0:2000]
 
             await send_long_message(message.channel, output["text"])
 
