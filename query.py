@@ -20,4 +20,5 @@ def query(payload):
 if __name__ == "__main__":
     output = query({
         "question": "Hey, what is Photonspark?",
+        "chatId": "1234567890",
     })

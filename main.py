@@ -14,6 +14,14 @@ import discord
 
 from responses import get_response
 
+# helper function to send long messages
+async def send_long_message(channel, text):
+    if len(text) > 2000:
+        for i in range(0, len(text), 2000):
+            await channel.send(text[i:i + 2000])
+    else:
+        await channel.send(text)
+
 # LLM AI API INTERACTION
 from query import query
 from upsert import upsert
@@ -21,6 +29,7 @@ from upsert import upsert
 class CustomClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.all())
+        self.user_sessions = {}  # This will hold user-specific conversation data
         self.synced = False
 
     async def on_ready(self):
@@ -35,25 +44,34 @@ class CustomClient(discord.Client):
         if message.author == self.user:
             return
 
+        user_id = message.author.id # Use this to identify users
+        if user_id not in self.user_sessions:
+            self.user_sessions[user_id] = {"chat_id": user_id}  # Add user-specific memory
+
+        # Use the user-specific chat_id in the query
+        user_chat_id = self.user_sessions[user_id]["chat_id"]
+
         ### check the category ID of the current channel ###
         if message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
             output = query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
                 "question": message.content,
+                "chat_id": user_chat_id  # Include chat_id in query payload
             })
 
-            output["text"] = output["text"][0:2000]
+            # output["text"] = output["text"][0:2000]
 
-            await message.channel.send(output["text"])
+            await send_long_message(message.channel, output["text"])
 
-        ### check the category ID of the current channel ###
+        ### check the channel ID of the current channel ###
         elif message.channel.id == 1244684281910132796 or message.channel.id == 1239122382304575508:
             output = query({    # PRIV SERVER CHANNEL                              # PUB SERVER
                 "question": message.content,
+                "chat_id": user_chat_id  # Include chat_id in query payload
             })
 
-            output["text"] = output["text"][0:2000]
+            # output["text"] = output["text"][0:2000]
 
-            await message.channel.send(output["text"])
+            await send_long_message(message.channel, output["text"])
 
         ### check if hardcoded guide message is better suited ###
         elif response := get_response(message.content):
@@ -80,6 +98,7 @@ async def stats(interaction: discord.Interaction):
 
 ##########################################################################################
 
+
 @tree.command(name="chat", description="Chat with Sparky")
 async def chat(interaction: discord.Interaction, message: str):
 
@@ -99,10 +118,19 @@ async def chat(interaction: discord.Interaction, message: str):
     output["text"] = output["text"][0:2000]
 
     ### LLM API LOGIC ENDS HERE ###
-
-    await interaction.followup.send(output["text"])#, view=view)
+    await send_long_message(message.channel, output["text"])
+    #await interaction.followup.send(output["text"])#, view=view)
     # output = query({"question" : message})["text"][0:2000]
     # await interaction.response.send_message(output, ephemeral = True)#, view=view)
+
+@tree.command(name="reset_chat", description="Reset your chat history with Sparky")
+async def reset_chat(interaction: discord.Interaction):
+    user_id = interaction.user.id  # Get the ID of the user issuing the command
+    if user_id in client.user_sessions:
+        del client.user_sessions[user_id]  # Delete the user's memory
+        await interaction.response.send_message("Your chat history has been reset!", ephemeral=True)
+    else:
+        await interaction.response.send_message("You have no active chat history.", ephemeral=True)
 
 @tree.command(name="sync", description="Sync/upsert the bot with the vector database")
 async def sync(interaction: discord.Interaction):
