@@ -55,7 +55,7 @@ class CustomClient(discord.Client):
         if message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
             output = query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
                 "question": message.content,
-                "chat_id": user_chat_id  # Include chat_id in query payload
+                "chatId": user_chat_id  # Include chat_id in query payload
             })
 
             # output["text"] = output["text"][0:2000]
@@ -66,7 +66,7 @@ class CustomClient(discord.Client):
         elif message.channel.id == 1244684281910132796 or message.channel.id == 1239122382304575508:
             output = query({    # PRIV SERVER CHANNEL                              # PUB SERVER
                 "question": message.content,
-                "chat_id": user_chat_id  # Include chat_id in query payload
+                "chatId": user_chat_id  # Include chat_id in query payload
             })
 
             # output["text"] = output["text"][0:2000]
@@ -98,30 +98,25 @@ async def stats(interaction: discord.Interaction):
 
 ##########################################################################################
 
-
 @tree.command(name="chat", description="Chat with Sparky")
 async def chat(interaction: discord.Interaction, message: str):
+    user_id = interaction.user.id  # Get the user ID to track the user-specific session
+    if user_id not in client.user_sessions:
+        client.user_sessions[user_id] = {"chat_id": user_id}  # Create user-specific session if not already existing
 
-    # view = discord.ui.View()
-    # view.add_item(discord.ui.Button(style=discord.ButtonStyle.danger, label="Cancel", custom_id="cancel"))
-    # options for the ButtonStyle are: primary, secondary, success, danger, link
-    # buttons need to be added again
+    user_chat_id = client.user_sessions[user_id]["chat_id"]  # Get the user's chat ID
 
-    await interaction.response.defer(thinking=True, ephemeral=True)
+    await interaction.response.defer(thinking=True, ephemeral=True)  # Acknowledge the user's input
 
     ### LLM API LOGIC STARTS HERE ###
-
     output = query({
         "question": message,
+        "chatId": user_chat_id  # Send chat_id along with the message for memory purposes
     })
-
-    output["text"] = output["text"][0:2000]
-
     ### LLM API LOGIC ENDS HERE ###
-    await send_long_message(message.channel, output["text"])
-    #await interaction.followup.send(output["text"])#, view=view)
-    # output = query({"question" : message})["text"][0:2000]
-    # await interaction.response.send_message(output, ephemeral = True)#, view=view)
+
+    # Send long message using the helper function for splitting text over 2000 chars
+    await send_long_message(interaction.followup, output["text"])
 
 @tree.command(name="reset_chat", description="Reset your chat history with Sparky")
 async def reset_chat(interaction: discord.Interaction):
