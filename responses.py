@@ -7,12 +7,7 @@ def get_response(user_input: str) -> str | None:
         return 'Hey there! If you need help, simply open a ticket in https://discord.com/channels/449234259387875328/956661628957524009 and talk to me in natural language about the problems that you are encountering. Alternatively, you can use the `/chat` from anywhere in the server I am present. I will be happy to help you out!'
     else: return None
 
-# async def send_long_message(channel, text):
-    # if len(text) > 2000:
-        # for i in range(0, len(text), 2000):
-            # await channel.send(text[i:i + 2000])
-    # else:
-        # await channel.send(text)
+##############################################################################
 
 async def send_long_message(channel, text):
     """Sends long messages in chunks, preserving code blocks, markdown, and whitespace artifacts."""
