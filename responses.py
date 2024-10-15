@@ -9,8 +9,15 @@ def get_response(user_input: str) -> str | None:
 
 ##############################################################################
 
-async def send_long_message(channel, text):
-    """Sends long messages in chunks, preserving code blocks, markdown, and whitespace artifacts."""
+async def send_long_message(channel, text, ephemeral=False, interaction=None):
+    """Sends long messages in chunks, preserving code blocks, markdown, and prevent whitespace artifacts.
+
+    Args:
+        channel: The channel or interaction to send the message to.
+        text: The content to send.
+        ephemeral: A boolean flag to indicate if the message should be ephemeral.
+        interaction: The interaction object (if any) used for sending ephemeral messages.
+    """
 
     max_len = 2000
     code_block_open = False  # Tracks whether we're inside a code block
@@ -24,10 +31,7 @@ async def send_long_message(channel, text):
         for line in text.splitlines(keepends=True):
             # Detect start/end of code blocks
             if line.startswith('```'):
-                if code_block_open:
-                    code_block_open = False
-                else:
-                    code_block_open = True
+                code_block_open = not code_block_open
 
             # If the line would exceed the limit, yield the current chunk
             if current_length + len(line) > max_len:
@@ -42,9 +46,19 @@ async def send_long_message(channel, text):
         if current_chunk:
             yield ''.join(current_chunk).rstrip()
 
-    # Go through the chunks and send them as separate messages
+    # Send the messages, handling both ephemeral and non-ephemeral cases
+    first_message = True
     for chunk in split_message(text):
-        await channel.send(chunk)
+        if interaction and ephemeral:
+            # For the first message, use interaction.response; for others, use followup
+            if first_message:
+                await interaction.response.send_message(chunk, ephemeral=True)
+                first_message = False
+            else:
+                await interaction.followup.send(chunk, ephemeral=True)
+        else:
+            await channel.send(chunk)
+
         if code_block_open:
             # Add a blank line between chunks if inside a code block, to avoid breaking syntax
             await channel.send("```")
