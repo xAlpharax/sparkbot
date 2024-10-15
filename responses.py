@@ -9,14 +9,15 @@ def get_response(user_input: str) -> str | None:
 
 ##############################################################################
 
-async def send_long_message(channel, text, ephemeral=False):
+async def send_long_message(channel, text, ephemeral=False, interaction=None):
     """
-    Sends long messages in chunks, preserving code blocks, markdown, whitespace artifacts, and syntax highlighting.
+    Sends long messages in chunks, preserving code blocks, markdown, syntax highlighting and prevent whitespace artifacts.
 
     Args:
         channel: The followup channel to send the message to.
         text: The content to send.
-        ephemeral: A boolean flag to indicate if the message should be ephemeral.
+        ephemeral: A boolean flag to indicate if the message should be ephemeral (used only for interactions).
+        interaction: The interaction object, if available, to send follow-up messages.
     """
 
     max_len = 2000  # Discord's character limit per message
@@ -78,14 +79,10 @@ async def send_long_message(channel, text, ephemeral=False):
             yield ''.join(current_chunk).rstrip()  # Yield the final chunk
 
     # Send the messages chunk by chunk
-    first_message = True
     for chunk in split_message(text):
-        if first_message:
-            # Send the first chunk
-            await channel.send(chunk, ephemeral=ephemeral)
-            first_message = False
-        else:
-            # Send the remaining chunks as follow-up messages
-            await channel.send(chunk, ephemeral=ephemeral)
+        if interaction is not None:  # Check if we have an interaction to send the message as ephemeral
+            await interaction.followup.send(chunk, ephemeral=ephemeral)
+        else:  # Standard message send
+            await channel.send(chunk)  # Send the chunk without ephemeral flag
 
 ##############################################################################
