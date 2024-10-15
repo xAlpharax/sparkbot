@@ -106,12 +106,15 @@ async def chat(interaction: discord.Interaction, message: str):
     ### LLM API LOGIC STARTS HERE ###
     output = await query({
         "question": message,
-        "chatId": user_chat_id  # Send chat_id along with the message for memory purposes
+        "chatId": user_chat_id  # Send chatId along with the message for memory purposes
     })
     ### LLM API LOGIC ENDS HERE ###
+
     print(output, "\n")
+
     # Send long message using the helper function for splitting text over 2000 chars
-    await send_long_message(interaction, output["text"], ephemeral=True, interaction=interaction)
+    await send_long_message(interaction.followup, output["text"], ephemeral=True)
+
 
 @tree.command(name="reset_all_memory", description="ADMIN UTIL: Reset all chat memory of Sparky")
 async def reset_all_memory(interaction: discord.Interaction):
