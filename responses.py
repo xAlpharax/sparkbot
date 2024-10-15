@@ -10,7 +10,7 @@ def get_response(user_input: str) -> str | None:
 ##############################################################################
 
 async def send_long_message(channel, text, ephemeral=False, interaction=None):
-    """Sends long messages in chunks, preserving code blocks, markdown, and prevent whitespace artifacts.
+    """Sends long messages in chunks, preserving code blocks, markdown, and whitespace artifacts.
 
     Args:
         channel: The channel or interaction to send the message to.
@@ -57,6 +57,7 @@ async def send_long_message(channel, text, ephemeral=False, interaction=None):
             else:
                 await interaction.followup.send(chunk, ephemeral=True)
         else:
+            # Non-ephemeral messages or regular messages sent through a channel
             await channel.send(chunk)
 
         if code_block_open:
