@@ -6,7 +6,10 @@ import os
 load_dotenv()
 
 RESET_MEMORY_API_URL = str(os.getenv("RESET_MEMORY_API_URL"))
-HEADERS = { "Authorization": f"Bearer {os.getenv('JWT')}" }
+JWT = str(os.getenv("JWT"))
+HEADERS = { "Authorization": "Bearer " + JWT }
+
+##############################################################################
 
 import requests
 

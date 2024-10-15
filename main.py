@@ -51,6 +51,7 @@ class CustomClient(discord.Client):
                 "question": message.content,
                 "chatId": user_chat_id  # Use user chatId
             })
+            print(output, "\n")
             await send_long_message(message.channel, output["text"])
 
         ### check the category ID of the current channel ###
@@ -59,7 +60,7 @@ class CustomClient(discord.Client):
                 "question": message.content,
                 "chatId": user_chat_id  # Include chatId in query payload
             })
-
+            print(output, "\n")
             await send_long_message(message.channel, output["text"])
 
         ### check the channel ID of the current channel ###
@@ -68,7 +69,7 @@ class CustomClient(discord.Client):
                 "question": message.content,
                 "chatId": user_chat_id  # Include chatId in query payload
             })
-
+            print(output, "\n")
             await send_long_message(message.channel, output["text"])
 
         ### check if hardcoded guide message is better suited ###
@@ -108,7 +109,7 @@ async def chat(interaction: discord.Interaction, message: str):
         "chatId": user_chat_id  # Send chat_id along with the message for memory purposes
     })
     ### LLM API LOGIC ENDS HERE ###
-
+    print(output, "\n")
     # Send long message using the helper function for splitting text over 2000 chars
     await send_long_message(interaction.followup, output["text"])
 
@@ -122,12 +123,12 @@ async def reset_all_memory(interaction: discord.Interaction):
 
         # Prepare the update message based on the success of the operation
         if error:
-            print(f"Reset failed. Please check the error messages above. {error}")
+            print(f"Reset failed. Please check the error messages above. {error}\n")
             await interaction.response.send_message(error, ephemeral=True)
         else:  # If there was a success
             # del client.user_sessions  # Remove all user memory from the bot
-            print("Reset successful:", response)
-            await interaction.response.send_message(f"Your chat memory has been reset! {response}", ephemeral=True)
+            print("Reset successful:", response, "\n")
+            await interaction.response.send_message(f"Your chat memory has been reset! {response}\n", ephemeral=True)
 
     else:
         await interaction.response.send_message("You do not have permission to do that")
@@ -138,7 +139,7 @@ async def update_docs(interaction: discord.Interaction):
     if interaction.user.id == 313565570660564994:
 
         # Send an initial ephemeral response
-        await interaction.response.send_message("Updating the vector database... Please wait.", ephemeral=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)  # Acknowledge the user's input
 
         # Perform the upsert operation
         success = upsert({})
@@ -149,9 +150,13 @@ async def update_docs(interaction: discord.Interaction):
         else:
             update_message = "Failed to update the vector database. Please try again later."
 
+        print(update_message, "\n")
+        print(success, "\n")
+        print(update_message, "\n")
+
         # Send a follow-up ephemeral message with the update status
         # Editing the already sent message is harder, so we send a new one
-        await interaction.followup.send(update_message, ephemeral=True)
+        await interaction.followup.send(update_message)
 
     else:
         await interaction.response.send_message("You do not have permission to do that")

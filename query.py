@@ -5,6 +5,8 @@ import os
 
 load_dotenv()
 PREDICTION_API_URL = str(os.getenv("PREDICTION_API_URL"))
+JWT = str(os.getenv("JWT"))
+HEADERS = { "Authorization": "Bearer " + JWT }
 
 ##############################################################################
 
@@ -24,7 +26,7 @@ import aiohttp
 
 async def query(payload):
     async with aiohttp.ClientSession() as session:
-        async with session.post(PREDICTION_API_URL, json=payload) as response:
+        async with session.post(PREDICTION_API_URL, headers=HEADERS, json=payload) as response:
             return await response.json()
 
 ##############################################################################
