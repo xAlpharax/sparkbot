@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ##############################################################################
 
 def get_response(user_input: str) -> str | None:
@@ -11,7 +13,7 @@ def get_response(user_input: str) -> str | None:
 
 async def send_long_message(channel, text, ephemeral=False, interaction=None):
     """
-    Sends long messages in chunks, preserving code blocks, markdown, syntax highlighting and prevent whitespace artifacts.
+    Sends long messages in chunks, preserving code blocks, markdown, syntax highlighting, and prevents whitespace artifacts.
 
     Args:
         channel: The followup channel to send the message to.
@@ -79,10 +81,15 @@ async def send_long_message(channel, text, ephemeral=False, interaction=None):
             yield ''.join(current_chunk).rstrip()  # Yield the final chunk
 
     # Send the messages chunk by chunk
+    first_message = True
     for chunk in split_message(text):
-        if interaction is not None:  # Check if we have an interaction to send the message as ephemeral
-            await interaction.followup.send(chunk, ephemeral=ephemeral)
+        if interaction is not None:  # Check if we have an interaction to send the message
+            if first_message:
+                await interaction.response.send_message(chunk, ephemeral=ephemeral)
+                first_message = False
+            else:
+                await interaction.followup.send(chunk, ephemeral=ephemeral)
         else:  # Standard message send
-            await channel.send(chunk)  # Send the chunk without ephemeral flag
+            await channel.send(chunk)
 
 ##############################################################################
