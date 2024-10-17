@@ -113,8 +113,7 @@ async def chat(interaction: discord.Interaction, message: str):
     print(output, "\n")
 
     # Send long message using the helper function for splitting text over 2000 chars
-    await send_long_message(interaction.followup, output["text"], ephemeral=True)
-
+    await send_long_message(interaction.followup, output["text"], ephemeral=True, interaction=interaction)
 
 @tree.command(name="reset_all_memory", description="ADMIN UTIL: Reset all chat memory of Sparky")
 async def reset_all_memory(interaction: discord.Interaction):
