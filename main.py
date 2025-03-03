@@ -56,12 +56,16 @@ class CustomClient(discord.Client):
 
         ### check the category ID of the current channel ###
         elif message.channel.category_id == 1244691546629214228 or message.channel.category_id in [1239120314340741152, 1239120397266321499, 1239120768563150880]:
-            output = await query({                # PRIV SERVER CATEGORY                                        # PUB SERVER
-                "question": message.content,
-                "chatId": user_chat_id  # Include chatId in query payload
-            })
-            print(output, "\n")
-            await send_long_message(message.channel, output["text"])
+                                            # PRIV SERVER CATEGORY                                        # PUB SERVER TICKETS
+
+            # check if 2 non-bot users are already talking in a ticket channel (were seen present there with their messages)
+            if len([m for m in message.channel.members if not m.bot]) >= 2:
+
+                output = await query({                    "question": message.content,
+                    "chatId": user_chat_id  # Include chatId in query payload
+                })
+                print(output, "\n")
+                await send_long_message(message.channel, output["text"])
 
         ### check the channel ID of the current channel ###
         elif message.channel.id == 1244684281910132796 or message.channel.id == 1239122382304575508:
